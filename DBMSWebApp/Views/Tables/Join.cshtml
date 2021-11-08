@@ -1,0 +1,74 @@
+﻿@model DBMSWebApp.Models.Table
+
+@{
+    ViewData["Title"] = "Join Tables";
+}
+
+<h1>Create</h1>
+
+<h4>Table</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Join">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label class="control-label">First Table</label>
+                <select id="firstTable" class="form-control" asp-items="ViewBag.Tables"></select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">First Column</label>
+                <select id="firstColumn" class="form-control" asp-items="ViewBag.Columns"></select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Second Table</label>
+                <select id="secondTable" class="form-control" asp-items="ViewBag.Tables"></select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Second Column</label>
+                <select id="secondColumn" class="form-control" asp-items="ViewBag.Columns"></select>
+            </div>
+            <div class="form-group">
+                <input type="hidden" value="@ViewBag.DatabaseId" name="DatabaseId" />
+                <input type="submit" value="Join" id="joinbtn" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" asp-route-databaseId="@ViewBag.DatabaseId">Back to List</a>
+</div>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script>
+
+    $(document).ready(function () {
+        $("#firstTable").change(function () {
+            $.get("/Tables/GetColumns", { tableId: $("#firstTable").val() }, function (data) {
+                $("#firstColumn").empty();
+                $.each(data, function (index, row) {
+                    $("#firstColumn").append("<option value='" + row.id + "'>" + row.name + "</option>")
+                });
+            });
+        })
+    });
+    $(document).ready(function () {
+        $("#secondTable").change(function () {
+            $.get("/Tables/GetColumns", { tableId: $("#secondTable").val() }, function (data) {
+                $("#secondColumn").empty();
+                $.each(data, function (index, row) {
+                    $("#secondColumn").append("<option value='" + row.id + "'>" + row.name + "</option>")
+                });
+            });
+        })
+    });
+    $(document).ready(function () {
+        $("#joinbtn").click(function () {
+            $.post("/Tables/Join", { firstTable: $("#firstTable").val(), secondTable: $("#secondTable").val(), firstCol: $("#firstColumn").val(), secondCol: $("#secondColumn").val() });
+        })
+    });
+</script>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
