@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ namespace DBMSWebApp.Models
             Rows = new List<Row>();
         }
         public int Id { get; set; }
+        [Required(ErrorMessage = "Name should not be empty")]
+
         public string Name { get; set; }
         public int DatabaseId { get; set; }
         public Database Database { get; set; }

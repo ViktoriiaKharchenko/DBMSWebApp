@@ -26,23 +26,6 @@ namespace DBMSWebApp.Controllers
             return View(await databaseContext.ToListAsync());
         }
 
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var column = await _context.Columns
-                .Include(c => c.Table)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (column == null)
-            {
-                return NotFound();
-            }
-
-            return View(column);
-        }
         public IActionResult Create(int? tableId)
         {
             ViewBag.TableId = tableId;
@@ -72,55 +55,7 @@ namespace DBMSWebApp.Controllers
             }
             return View(column);
         }
-
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var column = await _context.Columns.FindAsync(id);
-            if (column == null)
-            {
-                return NotFound();
-            }
-            ViewData["TableId"] = new SelectList(_context.Tables, "Id", "Name", column.TableId);
-            return View(column);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,TypeFullName,TableId")] Column column)
-        {
-            if (id != column.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(column);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ColumnExists(column.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["TableId"] = new SelectList(_context.Tables, "Id", "Name", column.TableId);
-            return View(column);
-        }
+      
         public async Task<IActionResult> Delete(int? tableId)
         {
             if (tableId == null)

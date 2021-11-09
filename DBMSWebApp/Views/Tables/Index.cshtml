@@ -7,8 +7,8 @@
 <h1>Tables</h1>
 
 <p>
-    <a asp-action="Create" asp-route-databaseId="@ViewBag.DatabaseId">Create New Table </a>
-    <a asp-action="Join" asp-route-databaseId="@ViewBag.DatabaseId">Join Tables </a>
+    <a asp-action="Create" asp-route-databaseId="@ViewBag.DatabaseId">Add table </a>
+    <a asp-action="Join" asp-route-databaseId="@ViewBag.DatabaseId">Join tables </a>
 </p>
 <table class="table">
     <thead>
@@ -39,3 +39,6 @@
 }
     </tbody>
 </table>
+<div>
+    <a asp-action="Index" asp-controller="Databases">Back to List</a>
+</div>

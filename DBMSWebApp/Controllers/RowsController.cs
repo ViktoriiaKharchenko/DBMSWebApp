@@ -27,24 +27,6 @@ namespace DBMSWebApp.Controllers
             return View(await databaseContext.ToListAsync());
         }
 
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var row = await _context.Rows
-                .Include(r => r.Table)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (row == null)
-            {
-                return NotFound();
-            }
-
-            return View(row);
-        }
-
         public IActionResult Create(int? tableId)
         {
             var table = _context.Tables.Where(t => t.Id == tableId).Include(t => t.Columns).First();

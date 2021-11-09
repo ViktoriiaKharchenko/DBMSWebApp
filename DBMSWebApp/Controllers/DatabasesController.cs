@@ -58,53 +58,6 @@ namespace DBMSWebApp.Controllers
             return View(database);
         }
 
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var database = await _context.Databases.FindAsync(id);
-            if (database == null)
-            {
-                return NotFound();
-            }
-            return View(database);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Database database)
-        {
-            if (id != database.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(database);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DatabaseExists(database.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(database);
-        }
-
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
