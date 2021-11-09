@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DBMSWebApp.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace DBMSWebApp.Controllers
 {
@@ -47,7 +48,7 @@ namespace DBMSWebApp.Controllers
         public IActionResult Create(int? databaseId)
         {
             ViewBag.DatabaseId = databaseId;
-            return View();
+            return View() ;
         }
 
         [HttpPost]
@@ -153,53 +154,64 @@ namespace DBMSWebApp.Controllers
         }
         public IActionResult Join(int? databaseId)
         {
+            var db = _context.Databases.Include(t=>t.Tables).First(t=>t.Id == databaseId);
+            if(db.Tables.Count < 2)
+            {
+                ModelState.AddModelError("Database", string.Format("Database {0} contains only {1} tables",db.Name, db.Tables.Count));
+                return View();
+            }
             ViewBag.DatabaseId = databaseId;
             ViewBag.Tables = new SelectList(_context.Tables.Where(t=>t.DatabaseId == databaseId), "Id", "Name");
             var firstTable = _context.Tables.Where(t => t.DatabaseId == databaseId).First();
             ViewBag.Columns = new SelectList(_context.Columns.Where(t => t.TableId == firstTable.Id), "Id", "Name");
             return View();
         }
-
         [HttpPost]
-        public async Task<IActionResult> Join(int firstTable, int secondTable, int firstCol, int secondCol)
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> JoinedTables([Bind("FirstTable, SecondTable, FirstColumn, SecondColumn")] JoinViewModel joinModel)
         {
-            var firsttbl = _context.Tables.Include(t=>t.Columns).Include(t=>t.Rows).First(t=>t.Id==firstTable);
-            var secondtbl = _context.Tables.Include(t => t.Columns).Include(t => t.Rows).First(t=>t.Id == secondTable);
-            var table = new Table();
-            //foreach (var col in firsttbl.Columns)
-            //{
-            //    if (!col.Name.Equals(column1, StringComparison.OrdinalIgnoreCase))
-            //     table.AddColumn(col.Name, col.TypeFullName, false);
-            //}
-            //    foreach (var col in secondTable.Columns)
-            //    {
-            //        if (!col.Name.Equals(column2, StringComparison.OrdinalIgnoreCase))
-            //            table.AddColumn(col.Name, col.TypeFullName, false);
-            //    }
-            //    int colIndex1 = firstTable.Columns.IndexOf(firstTable.GetColumn(column1));
-            //    int colIndex2 = secondTable.Columns.IndexOf(secondTable.GetColumn(column2));
-            //    foreach (var row in secondTable.Rows)
-            //    {
-            //        var rows = firstTable.Rows.FindAll(r => r[colIndex1] == row[colIndex2]);
-            //        foreach (var r in rows)
-            //        {
-            //            var tableRow = new List<string>();
-            //            tableRow.AddRange(r);
-            //            tableRow.AddRange(row);
-            //            tableRow.RemoveAt(r.Count + colIndex2);
-            //            tableRow.RemoveAt(colIndex1);
-            //            table.AddRows(tableRow, false);
-            //        }
-               // }
-                //var firstTable =  Request.Form["firstTable"].ToString();
-                //return RedirectToAction("Index", "Tables", new { databaseId = table.DatabaseId });
-         
-            return View();
+            var firsttbl = _context.Tables.Include(t => t.Columns).Include(t => t.Rows).FirstOrDefault(t => t.Id == joinModel.FirstTable);
+            var secondtbl = _context.Tables.Include(t => t.Columns).Include(t => t.Rows).FirstOrDefault(t => t.Id == joinModel.SecondTable);
+
+            var validRows = _context.Cells.Where(t => t.ColumnID == joinModel.FirstColumn)
+                    .Join(_context.Cells.Where(t => t.ColumnID == joinModel.SecondColumn), fc => fc.Value, sc => sc.Value, (fc, sc) => new { fc, sc })
+                    .Join(_context.Rows.Include(t => t.Cells), r => r.fc.RowId, c => c.Id, (rfc, c) => new { rfc, c })
+                    .Join(_context.Rows.Include(t => t.Cells), r2 => r2.rfc.sc.RowId, k => k.Id, (r2rfc, k) => new { r2rfc, k })
+                    .Select(m => new { Row1 = m.r2rfc.c, Row2 = m.k }).ToList();
+
+            var table = new Table
+            {
+                Columns = firsttbl.Columns.Where(t => t.Id != joinModel.FirstColumn).ToList()
+            };
+            foreach (var col in secondtbl.Columns)
+            {
+                if (col.Id != joinModel.SecondColumn)
+                    table.Columns.Add(col);
+            }
+            foreach (var row in validRows)
+            {
+                var Row = new Row
+                {
+                    Cells = row.Row1.Cells.Where(t => t.ColumnID != joinModel.FirstColumn).ToList()
+                };
+                foreach (var cell in row.Row2.Cells)
+                {
+                    if (cell.ColumnID != joinModel.SecondColumn)
+                        Row.Cells.Add(cell);
+                }
+                table.Rows.Add(Row);
+            }
+            table.Name = firsttbl.Name + "/" + secondtbl.Name;
+            table.DatabaseId = firsttbl.DatabaseId;
+
+            return View(table);
         }
+        
         [HttpGet]
-        public JsonResult GetColumns(int tableId)
+        public async Task<JsonResult> GetColumns(int tableId)
         {
-            List<Column> columns = _context.Columns.Where(x => x.TableId == tableId).ToList();
+            List<Column> columns = await _context.Columns.Where(x => x.TableId == tableId).ToListAsync();
             return Json(columns);
 
         }

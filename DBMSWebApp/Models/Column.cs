@@ -14,7 +14,7 @@ namespace DBMSWebApp.Models
             Cells = new List<Cell>();
         }
         public int Id { get; set; }
-
+        [Required(ErrorMessage = "Name should not be empty")]
         public string Name { get; set; }
 
         [Display (Name = "Type")]

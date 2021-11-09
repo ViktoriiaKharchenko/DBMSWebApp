@@ -54,8 +54,6 @@ namespace DBMSWebApp.Models
             });
             modelBuilder.Entity<Row>(entity =>
             {
-                entity.Property(e => e.Num)
-                    .IsRequired();
                 
                 entity.HasOne(d => d.Table)
                     .WithMany(p => p.Rows)
