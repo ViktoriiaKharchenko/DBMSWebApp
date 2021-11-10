@@ -107,51 +107,5 @@ namespace DBMSWebApp.Controllers
             }
             return Json(true);
         }
-        public IActionResult CellValid(string Value, int ColumnID)
-        {
-            var col = _context.Columns.Find(ColumnID);
-            if (col == null) return Json(data: "wrong val");
-            if (col.TypeFullName.Contains("Invl"))
-            {
-                bool type = col.TypeFullName.Contains("Char") ? true : false;
-                char from = col.TypeFullName.Split('(')[1].Substring(0, 1).ToCharArray()[0];
-                char to = col.TypeFullName.Split(',')[1].Substring(0, 1).ToCharArray()[0];
-                if (CheckValue(Value.ToString(), type, from, to))
-                    return Json(true);
-            }
-            else if (CheckCast(Value, col.TypeFullName))
-                return Json(true);
-
-            return Json(data: string.Format("Column {0} has {1} type", col.Name, col.TypeFullName));
-        }
-        private bool CheckCast(string value, string type)
-        {
-            if (value.ToString() == "") return true;
-            try
-            {
-                var resultVal = Convert.ChangeType(value, Type.GetType(type));
-                if (!resultVal.ToString().Equals(value.ToString()))
-                    throw new InvalidCastException();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        private bool CheckValue(string value, bool charType, char from, char to)
-        {
-            if (value == "") return true;
-
-            if (charType)
-            {
-                if (value.Length > 1) return false;
-            }
-            var charList = new List<char>();
-            charList.AddRange(value);
-            var invalidChars = charList.FindAll(c => c < from || c > to);
-            if (invalidChars.Count != 0) return false;
-            return true;
-        }
     }
 }

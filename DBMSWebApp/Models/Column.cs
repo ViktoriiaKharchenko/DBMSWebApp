@@ -19,6 +19,7 @@ namespace DBMSWebApp.Models
 
         [Display (Name = "Type")]
         [Remote(action: "TypeValid", controller: "Columns")]
+        [Required(ErrorMessage = "Type should not be empty")]
 
         public string TypeFullName { get; set; }
         public int TableId { get; set; }

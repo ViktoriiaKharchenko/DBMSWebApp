@@ -173,7 +173,7 @@ namespace DBMSWebApp.Controllers
                 bool type = col.TypeFullName.Contains("Char") ? true : false;
                 char from = col.TypeFullName.Split('(')[1].Substring(0, 1).ToCharArray()[0];
                 char to = col.TypeFullName.Split(',')[1].Substring(0, 1).ToCharArray()[0];
-                if (CheckValue(Value.ToString(), type, from, to))
+                if (CheckValue(Value, type, from, to))
                     return true;
             }
             else if (CheckCast(Value, col.TypeFullName))
@@ -198,7 +198,7 @@ namespace DBMSWebApp.Controllers
         }
         private bool CheckValue(string value, bool charType, char from, char to)
         {
-            if (value == "") return true;
+            if (value == null) return true;
 
             if (charType)
             {
